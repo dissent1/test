@@ -510,6 +510,7 @@ dtb-$(CONFIG_ARCH_QCOM) += \
 	qcom-ipq8064-db149.dtb \
 	qcom-ipq8064-r7500.dtb \
 	qcom-ipq8064-d7800.dtb \
+        qcom-ipq8064-r7800.dtb \
 	qcom-msm8660-surf.dtb \
 	qcom-msm8960-cdp.dtb \
 	qcom-msm8974-sony-xperia-honami.dtb
