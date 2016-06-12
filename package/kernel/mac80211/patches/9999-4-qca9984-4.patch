@@ -7,14 +7,7 @@ QCA9984 shares the same configuration with QCA99X0.
 
 Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 23 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h   | 11 +++++++++++
- drivers/net/wireless/ath/ath10k/pci.c  | 14 ++++++++++++++
- 3 files changed, 48 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 49af624..a003980 100644
 --- a/drivers/net/wireless/ath/ath10k/core.c
 +++ b/drivers/net/wireless/ath/ath10k/core.c
 @@ -163,6 +163,28 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
@@ -54,8 +47,6 @@ index 49af624..a003980 100644
  		ar->regs = &qca99x0_regs;
  		ar->hw_values = &qca99x0_values;
  		break;
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index aedd898..f41c91c 100644
 --- a/drivers/net/wireless/ath/ath10k/hw.h
 +++ b/drivers/net/wireless/ath/ath10k/hw.h
 @@ -26,6 +26,7 @@
@@ -97,8 +88,6 @@ index aedd898..f41c91c 100644
  #define QCA_REV_9377(ar) ((ar)->hw_rev == ATH10K_HW_QCA9377)
  #define QCA_REV_40XX(ar) ((ar)->hw_rev == ATH10K_HW_QCA4019)
  
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 81d6bad..8e8e1eb 100644
 --- a/drivers/net/wireless/ath/ath10k/pci.c
 +++ b/drivers/net/wireless/ath/ath10k/pci.c
 @@ -56,6 +56,7 @@ static const struct pci_device_id ath10k_pci_id_table[] = {
