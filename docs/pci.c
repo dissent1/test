@@ -2021,7 +2021,7 @@ int ath10k_pci_init_config(struct ath10k *ar)
 	ret = ath10k_pci_diag_write_mem(ar, pipe_cfg_targ_addr,
 					target_ce_config_wlan,
 					sizeof(struct ce_pipe_config) *
-					NUM_TARGET_CE_CPTCFG_WLAN);
+					NUM_TARGET_CE_CONFIG_WLAN);
 
 	if (ret != 0) {
 		ath10k_err(ar, "Failed to write pipe cfg: %d\n", ret);
