@@ -326,6 +326,16 @@ enum ath10k_hw_rate_cck {
 	ATH10K_HW_RATE_CCK_SP_2M,
 };
 
+enum ath10k_hw_rate_rev2_cck {
+	ATH10K_HW_RATE_REV2_CCK_LP_1M = 1,
+	ATH10K_HW_RATE_REV2_CCK_LP_2M,
+	ATH10K_HW_RATE_REV2_CCK_LP_5_5M,
+	ATH10K_HW_RATE_REV2_CCK_LP_11M,
+	ATH10K_HW_RATE_REV2_CCK_SP_2M,
+	ATH10K_HW_RATE_REV2_CCK_SP_5_5M,
+	ATH10K_HW_RATE_REV2_CCK_SP_11M,
+};
+
 enum ath10k_hw_4addr_pad {
 	ATH10K_HW_4ADDR_PAD_AFTER,
 	ATH10K_HW_4ADDR_PAD_BEFORE,
@@ -418,7 +428,7 @@ enum ath10k_hw_4addr_pad {
 /* Diagnostic Window */
 #define CE_DIAG_PIPE	7
 
-#define NUM_TARGET_CE_CONFIG_WLAN ar->hw_values->num_target_ce_config_wlan
+#define NUM_TARGET_CE_CPTCFG_WLAN ar->hw_values->num_target_ce_config_wlan
 
 /* Target specific defines for 10.4 firmware */
 #define TARGET_10_4_NUM_VDEVS			16

@@ -148,6 +148,8 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
 		.uart_pin = 7,
 		.otp_exe_param = 0x00000700,
 		.continuous_frag_desc = true,
+		.cck_rate_map_rev2 = true,
+		.cck_rate_map_rev2 = true,
 		.channel_counters_freq_hz = 150000,
 		.max_probe_resp_desc_thres = 24,
 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
@@ -227,6 +229,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
 		.has_shifted_cc_wraparound = true,
 		.otp_exe_param = 0x0010000,
 		.continuous_frag_desc = true,
+		.cck_rate_map_rev2 = true,
 		.channel_counters_freq_hz = 125000,
 		.max_probe_resp_desc_thres = 24,
 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
@@ -1187,9 +1190,6 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
 {
 	int ret;
 
-	/* calibration file is optional, don't check for any errors */
-	ath10k_fetch_cal_file(ar);
-
 	ar->fw_api = 5;
 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
 
@@ -1892,6 +1892,9 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
 		goto err_power_down;
 	}
 
+	/* calibration file is optional, don't check for any errors */
+	int calret = ath10k_fetch_cal_file(ar);
+
 	ret = ath10k_core_fetch_firmware_files(ar);
 	if (ret) {
 		ath10k_err(ar, "could not fetch firmware files (%d)\n", ret);
@@ -1914,11 +1917,14 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
 			   "could not load pre cal data: %d\n", ret);
 	}
 
-	ret = ath10k_core_get_board_id_from_otp(ar);
-	if (ret && ret != -EOPNOTSUPP) {
-		ath10k_err(ar, "failed to get board id from otp: %d\n",
-			   ret);
-		goto err_free_firmware_files;
+	/* otp and board file not needed if calibration data is present */
+	if (calret) {
+		ret = ath10k_core_get_board_id_from_otp(ar);
+		if (ret && ret != -EOPNOTSUPP) {
+			ath10k_err(ar, "failed to get board id from otp: %d\n",
+				ret);
+			return ret;
+		}
 	}
 
 	ret = ath10k_core_fetch_board_file(ar);
@@ -2030,6 +2036,16 @@ int ath10k_core_register(struct ath10k *ar, u32 chip_id)
 {
 	ar->chip_id = chip_id;
 	queue_work(ar->workqueue, &ar->register_work);
+
+	/* OpenWrt requires all PHYs to be initialized to create the
+	 * configuration files during bootup. ath10k violates this
+	 * because it delays the creation of the PHY to a not well defined
+	 * point in the future.
+	 *
+	 * Forcing the work to be done immediately works around this problem
+	 * but may also delay the boot when firmware images cannot be found.
+	 */
+	flush_workqueue(ar->workqueue);
 
 	return 0;
 }
