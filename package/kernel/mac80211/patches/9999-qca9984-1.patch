@@ -8,12 +8,7 @@ rx_pkt_end. This is to prepare rx_ppdu_end for QCA9984 chip.
 
 Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/rx_desc.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
-index ca8d168..3e7dfaa 100644
 --- a/drivers/net/wireless/ath/ath10k/rx_desc.h
 +++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
 @@ -994,7 +994,6 @@ struct rx_pkt_end {
@@ -32,6 +27,5 @@ index ca8d168..3e7dfaa 100644
  	struct rx_phy_ppdu_end rx_phy_ppdu_end;
  	__le32 rx_timing_offset; /* %RX_PPDU_END_RX_TIMING_OFFSET_ */
  	__le32 rx_info; /* %RX_PPDU_END_RX_INFO_ */
--- 
-cgit v0.12
+
 
