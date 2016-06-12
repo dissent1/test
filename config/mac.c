@@ -62,32 +62,6 @@ static struct ieee80211_rate ath10k_rates[] = {
 	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
 };
 
-static struct ieee80211_rate ath10k_rates_rev2[] = {
-	{ .bitrate = 10,
-	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_1M },
-	{ .bitrate = 20,
-	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_2M,
-	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_2M,
-	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-	{ .bitrate = 55,
-	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_5_5M,
-	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_5_5M,
-	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-	{ .bitrate = 110,
-	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_11M,
-	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_11M,
-	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-
-	{ .bitrate = 60, .hw_value = ATH10K_HW_RATE_OFDM_6M },
-	{ .bitrate = 90, .hw_value = ATH10K_HW_RATE_OFDM_9M },
-	{ .bitrate = 120, .hw_value = ATH10K_HW_RATE_OFDM_12M },
-	{ .bitrate = 180, .hw_value = ATH10K_HW_RATE_OFDM_18M },
-	{ .bitrate = 240, .hw_value = ATH10K_HW_RATE_OFDM_24M },
-	{ .bitrate = 360, .hw_value = ATH10K_HW_RATE_OFDM_36M },
-	{ .bitrate = 480, .hw_value = ATH10K_HW_RATE_OFDM_48M },
-	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
-};
-
 #define ATH10K_MAC_FIRST_OFDM_RATE_IDX 4
 
 #define ath10k_a_rates (ath10k_rates + ATH10K_MAC_FIRST_OFDM_RATE_IDX)
@@ -95,9 +69,6 @@ static struct ieee80211_rate ath10k_rates_rev2[] = {
 			     ATH10K_MAC_FIRST_OFDM_RATE_IDX)
 #define ath10k_g_rates (ath10k_rates + 0)
 #define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
-
-#define ath10k_g_rates_rev2 (ath10k_rates_rev2 + 0)
-#define ath10k_g_rates_rev2_size (ARRAY_SIZE(ath10k_rates_rev2))
 
 static bool ath10k_mac_bitrate_is_cck(int bitrate)
 {
@@ -802,7 +773,6 @@ static void ath10k_peer_cleanup(struct ath10k *ar, u32 vdev_id)
 {
 	struct ath10k_peer *peer, *tmp;
 	int peer_id;
-	int i;
 
 	lockdep_assert_held(&ar->conf_mutex);
 
@@ -819,17 +789,6 @@ static void ath10k_peer_cleanup(struct ath10k *ar, u32 vdev_id)
 			ar->peer_map[peer_id] = NULL;
 		}
 
-		/* Double check that peer is properly un-referenced from
-		 * the peer_map
-		 */
-		for (i = 0; i < ARRAY_SIZE(ar->peer_map); i++) {
-			if (ar->peer_map[i] == peer) {
-				ath10k_warn(ar, "removing stale peer_map entry for %pM (ptr %p idx %d)\n",
-					    peer->addr, peer, i);
-				ar->peer_map[i] = NULL;
-			}
-		}
-
 		list_del(&peer->list);
 		kfree(peer);
 		ar->num_peers--;
@@ -840,7 +799,6 @@ static void ath10k_peer_cleanup(struct ath10k *ar, u32 vdev_id)
 static void ath10k_peer_cleanup_all(struct ath10k *ar)
 {
 	struct ath10k_peer *peer, *tmp;
-	int i;
 
 	lockdep_assert_held(&ar->conf_mutex);
 
@@ -849,10 +807,6 @@ static void ath10k_peer_cleanup_all(struct ath10k *ar)
 		list_del(&peer->list);
 		kfree(peer);
 	}
-
-	for (i = 0; i < ARRAY_SIZE(ar->peer_map); i++)
-		ar->peer_map[i] = NULL;
-
 	spin_unlock_bh(&ar->data_lock);
 
 	ar->num_peers = 0;
@@ -3039,7 +2993,7 @@ static void ath10k_regd_update(struct ath10k *ar)
 
 	regpair = ar->ath_common.regulatory.regpair;
 
-	if (config_enabled(CPTCFG_ATH10K_DFS_CERTIFIED) && ar->dfs_detector) {
+	if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED) && ar->dfs_detector) {
 		nl_dfs_reg = ar->dfs_detector->region;
 		wmi_dfs_reg = ath10k_mac_get_dfs_region(nl_dfs_reg);
 	} else {
@@ -3068,7 +3022,7 @@ static void ath10k_reg_notifier(struct wiphy *wiphy,
 
 	ath_reg_notifier_apply(wiphy, request, &ar->ath_common.regulatory);
 
-	if (config_enabled(CPTCFG_ATH10K_DFS_CERTIFIED) && ar->dfs_detector) {
+	if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED) && ar->dfs_detector) {
 		ath10k_dbg(ar, ATH10K_DBG_REGULATORY, "dfs region 0x%x\n",
 			   request->dfs_region);
 		result = ar->dfs_detector->set_dfs_domain(ar->dfs_detector,
@@ -3827,6 +3781,9 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
 	int ret;
 	int max;
 
+	if (ar->htt.num_pending_tx >= (ar->htt.max_num_pending_tx / 2))
+		return;
+
 	spin_lock_bh(&ar->txqs_lock);
 	rcu_read_lock();
 
@@ -4097,9 +4054,7 @@ static void ath10k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
 		list_add_tail(&artxq->list, &ar->txqs);
 	spin_unlock_bh(&ar->txqs_lock);
 
-	if (ath10k_mac_tx_can_push(hw, txq))
-		tasklet_schedule(&ar->htt.txrx_compl_task);
-
+	ath10k_mac_tx_push_pending(ar);
 	ath10k_htt_tx_txq_update(hw, txq);
 }
 
@@ -5978,17 +5933,9 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
 				continue;
 
 			if (peer->sta == sta) {
-				ath10k_warn(ar, "found sta peer %pM (ptr %p id %d) entry on vdev %i after it was supposedly removed\n",
-					    sta->addr, peer, i, arvif->vdev_id);
+				ath10k_warn(ar, "found sta peer %pM entry on vdev %i after it was supposedly removed\n",
+					    sta->addr, arvif->vdev_id);
 				peer->sta = NULL;
-
-				/* Clean up the peer object as well since we
-				 * must have failed to do this above.
-				 */
-				list_del(&peer->list);
-				ar->peer_map[i] = NULL;
-				kfree(peer);
-				ar->num_peers--;
 			}
 		}
 		spin_unlock_bh(&ar->data_lock);
@@ -7411,7 +7358,7 @@ static const struct ieee80211_ops ath10k_ops = {
 	.suspend			= ath10k_wow_op_suspend,
 	.resume				= ath10k_wow_op_resume,
 #endif
-#ifdef CPTCFG_MAC80211_DEBUGFS
+#ifdef CONFIG_MAC80211_DEBUGFS
 	.sta_add_debugfs		= ath10k_sta_add_debugfs,
 #endif
 };
@@ -7516,7 +7463,7 @@ static const struct ieee80211_iface_limit ath10k_if_limits[] = {
 	{
 		.max	= 7,
 		.types	= BIT(NL80211_IFTYPE_AP)
-#ifdef CPTCFG_MAC80211_MESH
+#ifdef CONFIG_MAC80211_MESH
 			| BIT(NL80211_IFTYPE_MESH_POINT)
 #endif
 	},
@@ -7526,7 +7473,7 @@ static const struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
 	{
 		.max	= 8,
 		.types	= BIT(NL80211_IFTYPE_AP)
-#ifdef CPTCFG_MAC80211_MESH
+#ifdef CONFIG_MAC80211_MESH
 			| BIT(NL80211_IFTYPE_MESH_POINT)
 #endif
 	},
@@ -7553,7 +7500,7 @@ static const struct ieee80211_iface_combination ath10k_10x_if_comb[] = {
 		.max_interfaces = 8,
 		.num_different_channels = 1,
 		.beacon_int_infra_match = true,
-#ifdef CPTCFG_ATH10K_DFS_CERTIFIED
+#ifdef CONFIG_ATH10K_DFS_CERTIFIED
 		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
 					BIT(NL80211_CHAN_WIDTH_20) |
 					BIT(NL80211_CHAN_WIDTH_40) |
@@ -7570,7 +7517,7 @@ static const struct ieee80211_iface_limit ath10k_tlv_if_limit[] = {
 	{
 		.max = 2,
 		.types = BIT(NL80211_IFTYPE_AP) |
-#ifdef CPTCFG_MAC80211_MESH
+#ifdef CONFIG_MAC80211_MESH
 			 BIT(NL80211_IFTYPE_MESH_POINT) |
 #endif
 			 BIT(NL80211_IFTYPE_P2P_CLIENT) |
@@ -7594,7 +7541,7 @@ static const struct ieee80211_iface_limit ath10k_tlv_qcs_if_limit[] = {
 	{
 		.max = 1,
 		.types = BIT(NL80211_IFTYPE_AP) |
-#ifdef CPTCFG_MAC80211_MESH
+#ifdef CONFIG_MAC80211_MESH
 			 BIT(NL80211_IFTYPE_MESH_POINT) |
 #endif
 			 BIT(NL80211_IFTYPE_P2P_GO),
@@ -7663,7 +7610,7 @@ static const struct ieee80211_iface_limit ath10k_10_4_if_limits[] = {
 	{
 		.max	= 16,
 		.types	= BIT(NL80211_IFTYPE_AP)
-#ifdef CPTCFG_MAC80211_MESH
+#ifdef CONFIG_MAC80211_MESH
 			| BIT(NL80211_IFTYPE_MESH_POINT)
 #endif
 	},
@@ -7676,7 +7623,7 @@ static const struct ieee80211_iface_combination ath10k_10_4_if_comb[] = {
 		.max_interfaces = 16,
 		.num_different_channels = 1,
 		.beacon_int_infra_match = true,
-#ifdef CPTCFG_ATH10K_DFS_CERTIFIED
+#ifdef CONFIG_ATH10K_DFS_CERTIFIED
 		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
 					BIT(NL80211_CHAN_WIDTH_20) |
 					BIT(NL80211_CHAN_WIDTH_40) |
@@ -7716,21 +7663,6 @@ struct ath10k_vif *ath10k_get_arvif(struct ath10k *ar, u32 vdev_id)
 	return arvif_iter.arvif;
 }
 
-#ifdef CPTCFG_MAC80211_LEDS
-static const struct ieee80211_tpt_blink ath10k_tpt_blink[] = {
-	{ .throughput = 0 * 1024, .blink_time = 334 },
-	{ .throughput = 1 * 1024, .blink_time = 260 },
-	{ .throughput = 2 * 1024, .blink_time = 220 },
-	{ .throughput = 5 * 1024, .blink_time = 190 },
-	{ .throughput = 10 * 1024, .blink_time = 170 },
-	{ .throughput = 25 * 1024, .blink_time = 150 },
-	{ .throughput = 54 * 1024, .blink_time = 130 },
-	{ .throughput = 120 * 1024, .blink_time = 110 },
-	{ .throughput = 265 * 1024, .blink_time = 80 },
-	{ .throughput = 586 * 1024, .blink_time = 50 },
-};
-#endif
-
 int ath10k_mac_register(struct ath10k *ar)
 {
 	static const u32 cipher_suites[] = {
@@ -7764,14 +7696,8 @@ int ath10k_mac_register(struct ath10k *ar)
 		band = &ar->mac.sbands[NL80211_BAND_2GHZ];
 		band->n_channels = ARRAY_SIZE(ath10k_2ghz_channels);
 		band->channels = channels;
-
-		if (ar->hw_params.cck_rate_map_rev2) {
-			band->n_bitrates = ath10k_g_rates_rev2_size;
-			band->bitrates = ath10k_g_rates_rev2;
-		} else {
-			band->n_bitrates = ath10k_g_rates_size;
-			band->bitrates = ath10k_g_rates;
-		}
+		band->n_bitrates = ath10k_g_rates_size;
+		band->bitrates = ath10k_g_rates;
 
 		ar->hw->wiphy->bands[NL80211_BAND_2GHZ] = band;
 	}
@@ -7935,7 +7861,7 @@ int ath10k_mac_register(struct ath10k *ar)
 	if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
 		ar->hw->netdev_features = NETIF_F_HW_CSUM;
 
-	if (config_enabled(CPTCFG_ATH10K_DFS_CERTIFIED)) {
+	if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED)) {
 		/* Init ath dfs pattern detector */
 		ar->ath_common.debug_mask = ATH_DBG_DFS;
 		ar->dfs_detector = dfs_pattern_detector_init(&ar->ath_common,
@@ -7954,12 +7880,6 @@ int ath10k_mac_register(struct ath10k *ar)
 
 	ar->hw->wiphy->cipher_suites = cipher_suites;
 	ar->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
-
-#if CPTCFG_MAC80211_LEDS
-	ieee80211_create_tpt_led_trigger(ar->hw,
-		IEEE80211_TPT_LEDTRIG_FL_RADIO, ath10k_tpt_blink,
-		ARRAY_SIZE(ath10k_tpt_blink));
-#endif
 
 	ret = ieee80211_register_hw(ar->hw);
 	if (ret) {
@@ -7980,7 +7900,7 @@ err_unregister:
 	ieee80211_unregister_hw(ar->hw);
 
 err_dfs_detector_exit:
-	if (config_enabled(CPTCFG_ATH10K_DFS_CERTIFIED) && ar->dfs_detector)
+	if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED) && ar->dfs_detector)
 		ar->dfs_detector->exit(ar->dfs_detector);
 
 err_free:
@@ -7995,7 +7915,7 @@ void ath10k_mac_unregister(struct ath10k *ar)
 {
 	ieee80211_unregister_hw(ar->hw);
 
-	if (config_enabled(CPTCFG_ATH10K_DFS_CERTIFIED) && ar->dfs_detector)
+	if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED) && ar->dfs_detector)
 		ar->dfs_detector->exit(ar->dfs_detector);
 
 	kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
