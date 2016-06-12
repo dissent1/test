@@ -1,6 +1,6 @@
 --- a/drivers/net/wireless/ath/ath10k/rx_desc.h
 +++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
-@@ -994,7 +994,6 @@ struct rx_pkt_end {
+@@ -994,7 +994,6 @@
  	__le32 info0; /* %RX_PKT_END_INFO0_ */
  	__le32 phy_timestamp_1;
  	__le32 phy_timestamp_2;
@@ -8,7 +8,7 @@
  } __packed;
  
  enum rx_phy_ppdu_end_info0 {
-@@ -1067,6 +1066,7 @@ struct rx_phy_ppdu_end {
+@@ -1067,6 +1066,7 @@
  
  struct rx_ppdu_end_qca99x0 {
  	struct rx_pkt_end rx_pkt_end;
