@@ -134,6 +134,3 @@ index 959dc32..6eca1df 100644
  	/* Keep this entry in the last, memory for struct ath10k_ahb is
  	 * allocated (ahb support enabled case) in the continuation of
  	 * this struct.
--- 
-cgit v0.12
-
