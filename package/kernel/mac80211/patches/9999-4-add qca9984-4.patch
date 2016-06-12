@@ -166,6 +166,3 @@ index 81d6bad..8e8e1eb 100644
  	case QCA9377_1_0_DEVICE_ID:
  		hw_rev = ATH10K_HW_QCA9377;
  		pci_ps = true;
--- 
-cgit v0.12
-
