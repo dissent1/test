@@ -10,12 +10,7 @@ which has the new structure to represent rx_location_info.
 
 Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/rx_desc.h | 46 +++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
-index 3e7dfaa..9ceebea 100644
 --- a/drivers/net/wireless/ath/ath10k/rx_desc.h
 +++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
 @@ -996,6 +996,41 @@ struct rx_pkt_end {
