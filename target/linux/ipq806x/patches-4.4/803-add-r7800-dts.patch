@@ -10,7 +10,7 @@
         qcom-msm8974-sony-xperia-honami.dtb
 --- /dev/null
 +++ b/arch/arm/boot/dts/qcom-ipq8064-r7800.dts
-@@ -0,0 +1,373 @@
+@@ -0,0 +1,372 @@
 +#include "qcom-ipq8065-v1.0.dtsi"
 +
 +#include <dt-bindings/input/input.h>
