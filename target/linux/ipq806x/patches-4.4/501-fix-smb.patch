@@ -2,8 +2,8 @@ Change DT to use new smb208 regulator driver.
 
 Signed-off-by: Adrian Panella <ianchi74@outlook.com>
 
---- a/arch/arm/boot/dts/qcom-ipq8064.dtsi
-+++ b/arch/arm/boot/dts/qcom-ipq8064.dtsi
+--- a/arch/arm/boot/dts/qcom-ipq8065.dtsi
++++ b/arch/arm/boot/dts/qcom-ipq8065.dtsi
 @@ -311,45 +311,37 @@ rpm@108000 
  			#address-cells = <1>;
  			#size-cells = <0>;
