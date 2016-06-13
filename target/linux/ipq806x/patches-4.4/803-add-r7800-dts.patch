@@ -328,53 +328,53 @@
 +		compatible = "gpio-leds";
 +
 +		usb1 {
-+			label = "r7x00:amber:usb1";
++			label = "r7800:amber:usb1";
 +			gpios = <&qcom_pinmux 7 0>;
 +		};
 +
 +		usb3 {
-+			label = "r7x00:amber:usb3";
++			label = "r7800:amber:usb3";
 +			gpios = <&qcom_pinmux 8 0>;
 +		};
 +
 +		status {
-+			label = "r7x00:amber:status";
++			label = "r7800:amber:status";
 +			gpios = <&qcom_pinmux 9 0>;
 +		};
 +
 +		internet {
-+			label = "r7x00:white:internet";
++			label = "r7800:white:internet";
 +			gpios = <&qcom_pinmux 22 0>;
 +		};
 +
 +		wan {
-+			label = "r7x00:white:wan";
++			label = "r7800:white:wan";
 +			gpios = <&qcom_pinmux 23 0>;
 +		};
 +
 +		wps {
-+			label = "r7x00:white:wps";
++			label = "r7800:white:wps";
 +			gpios = <&qcom_pinmux 24 0>;
 +		};
 +
 +		esata {
-+			label = "r7x00:white:esata";
++			label = "r7800:white:esata";
 +			gpios = <&qcom_pinmux 26 0>;
 +		};
 +
 +		power {
-+			label = "r7x00:white:power";
++			label = "r7800:white:power";
 +			gpios = <&qcom_pinmux 53 0>;
 +			default-state = "on";
 +		};
 +
 +		rfkill {
-+			label = "r7x00:white:rfkill";
++			label = "r7800:white:rfkill";
 +			gpios = <&qcom_pinmux 64 0>;
 +		};
 +
 +		wifi5g {
-+			label = "r7x00:white:wifi5g";
++			label = "r7800:white:wifi5g";
 +			gpios = <&qcom_pinmux 67 0>;
 +		};
 +	};
