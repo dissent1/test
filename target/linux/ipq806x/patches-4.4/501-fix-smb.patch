@@ -4,7 +4,7 @@ Signed-off-by: Adrian Panella <ianchi74@outlook.com>
 
 --- a/arch/arm/boot/dts/qcom-ipq8064.dtsi
 +++ b/arch/arm/boot/dts/qcom-ipq8064.dtsi
-@@ -167,45 +167,37 @@ rpm@108000 {
+@@ -311,45 +311,37 @@ rpm@108000 
  			#address-cells = <1>;
  			#size-cells = <0>;
  
@@ -44,30 +44,30 @@ Signed-off-by: Adrian Panella <ianchi74@outlook.com>
 +					regulator-max-microvolt = <1150000>;
  
 -				regulator-min-microvolt = < 800000>;
--				regulator-max-microvolt = <1250000>;
+-				regulator-max-microvolt = <1275000>;
 +					qcom,switch-mode-frequency = <1200000>;
 +				};
  
--				qcom,switch-mode-frequency = <1200000>;
+-				qcom,switch-mode-frequency = <1400000>;
 -			};
 +				smb208_s2a: s2a {
 +					regulator-min-microvolt = < 800000>;
-+					regulator-max-microvolt = <1250000>;
++					regulator-max-microvolt = <1275000>;
  
 -			smb208_s2b: smb208-s2b {
 -				compatible = "qcom,rpm-smb208";
 -				reg = <QCOM_RPM_SMB208_S2b>;
-+					qcom,switch-mode-frequency = <1200000>;
++					qcom,switch-mode-frequency = <1400000>;
 +				};
  
 -				regulator-min-microvolt = < 800000>;
--				regulator-max-microvolt = <1250000>;
+-				regulator-max-microvolt = <1275000>;
 +				smb208_s2b: s2b {
 +					regulator-min-microvolt = < 800000>;
-+					regulator-max-microvolt = <1250000>;
++					regulator-max-microvolt = <1275000>;
  
--				qcom,switch-mode-frequency = <1200000>;
-+					qcom,switch-mode-frequency = <1200000>;
+-				qcom,switch-mode-frequency = <1400000>;
++					qcom,switch-mode-frequency = <1400000>;
 +				};
  			};
  		};
