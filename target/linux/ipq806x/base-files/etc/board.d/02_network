@@ -25,9 +25,6 @@ db149)
 	ucidef_add_switch "switch0" \
 		"1:lan" "2:lan" "3:lan" "4:lan" "6@eth1" "5:wan" "0@eth0"
 	;;
-*)
-	echo "Unsupported hardware. Network interfaces not intialized"
-	;;
 ea8500)
 
 	hw_mac_addr=$(mtd_get_mac_ascii devinfo hw_mac_addr)
@@ -35,6 +32,9 @@ ea8500)
 		"1:lan" "2:lan" "3:lan" "4:lan" "0t@eth0" "5:wan" "0t@eth0"
 	ucidef_set_interface_macaddr "lan" "$hw_mac_addr"
 	ucidef_set_interface_macaddr "wan" "$hw_mac_addr"
+	;;
+*)
+	echo "Unsupported hardware. Network interfaces not intialized"
 	;;
 esac
 
