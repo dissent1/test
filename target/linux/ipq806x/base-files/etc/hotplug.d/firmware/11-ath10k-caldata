@@ -66,7 +66,6 @@ case "$FIRMWARE" in
 		ath10kcal_extract "radio" 20480 12064
 # 		ath10kcal_patch_mac $(macaddr_add $(mtd_get_mac_binary default-mac 8) -2)
 		;;
-
 	ea8500)
 		hw_mac_addr=$(mtd_get_mac_ascii devinfo hw_mac_addr)
 		ath10kcal_extract "art" 20480 12064
