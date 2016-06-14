@@ -9,6 +9,7 @@ platform_check_image() {
 	ap148 |\
 	d7800 |\
 	r7500 |\
+	ea8500 |\
         r7800)
 		nand_do_platform_check $board $1
 		return $?;
@@ -36,6 +37,9 @@ platform_pre_upgrade() {
         r7800)
 		nand_do_upgrade "$1"
 		;;
+        ea8500)
+		linksys_preupgrade "$1"
+		;;
 	esac
 }
 
@@ -47,6 +51,9 @@ platform_do_upgrade() {
 		PART_NAME="os-image:rootfs"
 		MTD_CONFIG_ARGS="-s 0x200000"
 		default_do_upgrade "$ARGV"
+		;;
+        ea8500)
+		platform_do_upgrade_linksys "$ARGV"
 		;;
 	esac
 }
