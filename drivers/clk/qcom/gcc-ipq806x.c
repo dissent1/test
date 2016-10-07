@@ -658,8 +658,8 @@ static struct freq_tbl clk_tbl_gsbi_qup[] = {
 	{ 10800000, P_PXO,  1, 2,  5 },
 	{ 15060000, P_PLL8, 1, 2, 51 },
 	{ 24000000, P_PLL8, 4, 1,  4 },
-	{ 25000000, P_PXO,  1, 0,  0 },
 	{ 25600000, P_PLL8, 1, 1, 15 },
+	{ 27000000, P_PXO,  1, 0,  0 },
 	{ 48000000, P_PLL8, 4, 1,  2 },
 	{ 51200000, P_PLL8, 1, 2, 15 },
 	{ }
@@ -1056,8 +1056,10 @@ static struct clk_branch gsbi7_h_clk = {
 };
 
 static const struct freq_tbl clk_tbl_gp[] = {
-	{ 12500000, P_PXO,  2, 0, 0 },
-	{ 25000000, P_PXO,  1, 0, 0 },
+	{ 9600000, P_CXO,  2, 0, 0 },
+	{ 13500000, P_PXO,  2, 0, 0 },
+	{ 19200000, P_CXO,  1, 0, 0 },
+	{ 27000000, P_PXO,  1, 0, 0 },
 	{ 64000000, P_PLL8, 2, 1, 3 },
 	{ 76800000, P_PLL8, 1, 1, 5 },
 	{ 96000000, P_PLL8, 4, 0, 0 },
@@ -1266,7 +1268,7 @@ static struct clk_branch prng_clk = {
 };
 
 static const struct freq_tbl clk_tbl_sdc[] = {
-	{    200000, P_PXO,   2, 2, 125 },
+	{    144000, P_PXO,   3, 2, 125 },
 	{    400000, P_PLL8,  4, 1, 240 },
 	{  16000000, P_PLL8,  4, 1,   6 },
 	{  17070000, P_PLL8,  1, 2,  45 },
