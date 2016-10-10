@@ -387,4 +387,4 @@ static struct platform_driver krait_cpufreq_platdrv = {
 module_platform_driver(krait_cpufreq_platdrv);
 
 MODULE_DESCRIPTION("Krait CPUfreq driver");
-MODULE_LICENSE("GPL v2");
+MODULE_LICENSE("GPL v2");a 
