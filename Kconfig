@@ -1,79 +1,136 @@
-#
-# QCOM Soc drivers
-#
-config QCOM_GSBI
-        tristate "QCOM General Serial Bus Interface"
-        depends on ARCH_QCOM
-        select MFD_SYSCON
-        help
-          Say y here to enable GSBI support.  The GSBI provides control
-          functions for connecting the underlying serial UART, SPI, and I2C
-          devices to the output pins.
+config QCOM_GDSC
+	bool
+	select PM_GENERIC_DOMAINS if PM
 
-config QCOM_PM
-	bool "Qualcomm Power Management"
-	depends on ARCH_QCOM && !ARM64
-	select QCOM_SCM
+config COMMON_CLK_QCOM
+	tristate "Support for Qualcomm's clock controllers"
+	depends on OF
+	depends on ARCH_QCOM || COMPILE_TEST
+	select REGMAP_MMIO
+	select RESET_CONTROLLER
+
+config APQ_GCC_8084
+	tristate "APQ8084 Global Clock Controller"
+	select QCOM_GDSC
+	depends on COMMON_CLK_QCOM
 	help
-	  QCOM Platform specific power driver to manage cores and L2 low power
-	  modes. It interface with various system drivers to put the cores in
-	  low power modes.
+	  Support for the global clock controller on apq8084 devices.
+	  Say Y if you want to use peripheral devices such as UART, SPI,
+	  i2c, USB, SD/eMMC, SATA, PCIe, etc.
 
-config QCOM_SMEM
-	tristate "Qualcomm Shared Memory Manager (SMEM)"
-	depends on ARCH_QCOM
-	depends on HWSPINLOCK
+config APQ_MMCC_8084
+	tristate "APQ8084 Multimedia Clock Controller"
+	select APQ_GCC_8084
+	select QCOM_GDSC
+	depends on COMMON_CLK_QCOM
 	help
-	  Say y here to enable support for the Qualcomm Shared Memory Manager.
-	  The driver provides an interface to items in a heap shared among all
-	  processors in a Qualcomm platform.
+	  Support for the multimedia clock controller on apq8084 devices.
+	  Say Y if you want to support multimedia devices such as display,
+	  graphics, video encode/decode, camera, etc.
 
-config QCOM_SMD
-	tristate "Qualcomm Shared Memory Driver (SMD)"
-	depends on QCOM_SMEM
+config IPQ_GCC_806X
+	tristate "IPQ806x Global Clock Controller"
+	depends on COMMON_CLK_QCOM
 	help
-	  Say y here to enable support for the Qualcomm Shared Memory Driver
-	  providing communication channels to remote processors in Qualcomm
-	  platforms.
+	  Support for the global clock controller on ipq806x devices.
+	  Say Y if you want to use peripheral devices such as UART, SPI,
+	  i2c, USB, SD/eMMC, etc.
 
-config QCOM_SMD_RPM
-	tristate "Qualcomm Resource Power Manager (RPM) over SMD"
-	depends on QCOM_SMD && OF
+config IPQ_LCC_806X
+	tristate "IPQ806x LPASS Clock Controller"
+	select IPQ_GCC_806X
+	depends on COMMON_CLK_QCOM
 	help
-	  If you say yes to this option, support will be included for the
-	  Resource Power Manager system found in the Qualcomm 8974 based
-	  devices.
+	  Support for the LPASS clock controller on ipq806x devices.
+	  Say Y if you want to use audio devices such as i2s, pcm,
+	  S/PDIF, etc.
 
-	  This is required to access many regulators, clocks and bus
-	  frequencies controlled by the RPM on these devices.
-
-	  Say M here if you want to include support for the Qualcomm RPM as a
-	  module. This will build a module called "qcom-smd-rpm".
-
-config MSM_BUS_SCALING
-	bool "Bus scaling driver"
-	default n
+config MSM_GCC_8660
+	tristate "MSM8660 Global Clock Controller"
+	depends on COMMON_CLK_QCOM
 	help
-		This option enables bus scaling on MSM devices.  Bus scaling
-		allows devices to request the clocks be set to rates sufficient
-		for the active devices needs without keeping the clocks at max
-		frequency when a slower speed is sufficient.
+	  Support for the global clock controller on msm8660 devices.
+	  Say Y if you want to use peripheral devices such as UART, SPI,
+	  i2c, USB, SD/eMMC, etc.
 
-config MSM_BUSPM_DEV
-	tristate "MSM Bus Performance Monitor Kernel Module"
-	depends on MSM_BUS_SCALING
-	default n
+config MSM_GCC_8916
+	tristate "MSM8916 Global Clock Controller"
+	select QCOM_GDSC
+	depends on COMMON_CLK_QCOM
 	help
-	  This kernel module is used to mmap() hardware registers for the
-	  performance monitors, counters, etc. The module can also be used to
-	  allocate physical memory which is used by bus performance hardware to
-	  dump performance data
+	  Support for the global clock controller on msm8916 devices.
+	  Say Y if you want to use devices such as UART, SPI i2c, USB,
+	  SD/eMMC, display, graphics, camera etc.
 
-config BUS_TOPOLOGY_ADHOC
-	bool "ad-hoc bus scaling topology"
-	default n
+config MSM_GCC_8960
+	tristate "APQ8064/MSM8960 Global Clock Controller"
+	depends on COMMON_CLK_QCOM
 	help
-		This option enables a driver that can handle adhoc bus topologies.
-		Adhoc bus topology driver allows one to many connections and maintains
-		directionality of connections by explicitly listing device connections
-		thus avoiding illegal routes.
+	  Support for the global clock controller on apq8064/msm8960 devices.
+	  Say Y if you want to use peripheral devices such as UART, SPI,
+	  i2c, USB, SD/eMMC, SATA, PCIe, etc.
+
+config MSM_LCC_8960
+	tristate "APQ8064/MSM8960 LPASS Clock Controller"
+	select MSM_GCC_8960
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the LPASS clock controller on apq8064/msm8960 devices.
+	  Say Y if you want to use audio devices such as i2s, pcm,
+	  SLIMBus, etc.
+
+config MSM_MMCC_8960
+	tristate "MSM8960 Multimedia Clock Controller"
+	select MSM_GCC_8960
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the multimedia clock controller on msm8960 devices.
+	  Say Y if you want to support multimedia devices such as display,
+	  graphics, video encode/decode, camera, etc.
+
+config MSM_GCC_8974
+	tristate "MSM8974 Global Clock Controller"
+	select QCOM_GDSC
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the global clock controller on msm8974 devices.
+	  Say Y if you want to use peripheral devices such as UART, SPI,
+	  i2c, USB, SD/eMMC, SATA, PCIe, etc.
+
+config MSM_MMCC_8974
+	tristate "MSM8974 Multimedia Clock Controller"
+	select MSM_GCC_8974
+	select QCOM_GDSC
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the multimedia clock controller on msm8974 devices.
+	  Say Y if you want to support multimedia devices such as display,
+	  graphics, video encode/decode, camera, etc.
+
+config QCOM_HFPLL
+	tristate "High-Frequency PLL (HFPLL) Clock Controller"
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the high-frequency PLLs present on Qualcomm devices.
+	  Say Y if you want to support CPU frequency scaling on devices
+	  such as MSM8974, APQ8084, etc.
+
+config KPSS_XCC
+	tristate "KPSS Clock Controller"
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for the Krait ACC and GCC clock controllers. Say Y
+	  if you want to support CPU frequency scaling on devices such
+	  as MSM8960, APQ8064, etc.
+
+config KRAITCC
+	tristate "Krait Clock Controller"
+	depends on COMMON_CLK_QCOM && ARM
+	select KRAIT_CLOCKS
+	help
+	  Support for the Krait CPU clocks on Qualcomm devices.
+	  Say Y if you want to support CPU frequency scaling.
+
+config KRAIT_CLOCKS
+	bool
+	select KRAIT_L2_ACCESSORS
