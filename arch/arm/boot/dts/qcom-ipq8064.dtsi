@@ -26,8 +26,8 @@
 			next-level-cache = <&L2>;
 			qcom,acc = <&acc0>;
 			qcom,saw = <&saw0>;
-			clocks = <&kraitcc 0>;
-			clock-names = "cpu";
+			clocks = <&kraitcc 0>, <&kraitcc 4>;
+			clock-names = "cpu", "l2";
 			clock-latency = <100000>;
 			core-supply = <&smb208_s2a>;
 			voltage-tolerance = <5>;
@@ -41,8 +41,8 @@
 			next-level-cache = <&L2>;
 			qcom,acc = <&acc1>;
 			qcom,saw = <&saw1>;
-			clocks = <&kraitcc 1>;
-			clock-names = "cpu";
+			clocks = <&kraitcc 1>, <&kraitcc 4>;
+			clock-names = "cpu", "l2";
 			clock-latency = <100000>;
 			core-supply = <&smb208_s2b>;
 		};
@@ -50,15 +50,11 @@
 		L2: l2-cache {
 			compatible = "cache";
 			cache-level = <2>;
-			clocks = <&kraitcc 4>;
-			clock-names = "cache";
-			cache-points-kHz = <
-				/* kHz    uV    CPU kHz */
-				1200000 1150000 1200000
-				1000000 1100000  600000
-				 384000 1100000  384000
-			>;
 			vdd_dig-supply = <&smb208_s1a>;
+		};
+
+		qcom,l2 {
+			qcom,l2-rates = <384000000 1000000000 1200000000>;
 		};
 	};
 
@@ -84,18 +80,6 @@
 	};
 
 	clocks {
-		cxo_board {
-			compatible = "fixed-clock";
-			#clock-cells = <0>;
-			clock-frequency = <19200000>;
-		};
-
-		pxo_board {
-			compatible = "fixed-clock";
-			#clock-cells = <0>;
-			clock-frequency = <27000000>;
-		};
-
 		sleep_clk: sleep_clk {
 			compatible = "fixed-clock";
 			clock-frequency = <32768>;
@@ -267,7 +251,7 @@
 				     <1 4 0x301>,
 				     <1 5 0x301>;
 			reg = <0x0200a000 0x100>;
-			clock-frequency = <27000000>,
+			clock-frequency = <25000000>,
 					  <32768>;
 			clocks = <&sleep_clk>;
 			clock-names = "sleep";
