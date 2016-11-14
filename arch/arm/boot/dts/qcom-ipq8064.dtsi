@@ -243,7 +243,7 @@
 				mux {
 					pins = "gpio3";
 					function = "pcie1_rst";
-					drive-strength = <12>;
+					drive-strength = <2>;
 					bias-disable;
 				};
 			};
@@ -252,7 +252,7 @@
 				mux {
 					pins = "gpio48";
 					function = "pcie2_rst";
-					drive-strength = <12>;
+					drive-strength = <2>;
 					bias-disable;
 				};
 			};
@@ -261,8 +261,9 @@
 				mux {
 					pins = "gpio63";
 					function = "pcie3_rst";
-					drive-strength = <12>;
+					drive-strength = <2>;
 					bias-disable;
+					output-low;
 				};
 			};
 		};
@@ -576,7 +577,6 @@
 				interrupts = <0 110 0x4>;
 				phys = <&hs_phy_0>, <&ss_phy_0>;
 				phy-names = "usb2-phy", "usb3-phy";
-				tx-fifo-resize;
 				dr_mode = "host";
 			};
 		};
@@ -598,7 +598,6 @@
 				interrupts = <0 205 0x4>;
 				phys = <&hs_phy_1>, <&ss_phy_1>;
 				phy-names = "usb2-phy", "usb3-phy";
-				tx-fifo-resize;
 				dr_mode = "host";
 			};
 		};
@@ -650,7 +649,7 @@
 			pinctrl-0 = <&pcie0_pins>;
 			pinctrl-names = "default";
 
-			perst-gpio = <&qcom_pinmux 3 GPIO_ACTIVE_LOW>;
+			perst-gpios = <&qcom_pinmux 3 GPIO_ACTIVE_LOW>;
 
 			status = "disabled";
 		};
@@ -702,7 +701,7 @@
 			pinctrl-0 = <&pcie1_pins>;
 			pinctrl-names = "default";
 
-			perst-gpio = <&qcom_pinmux 48 GPIO_ACTIVE_LOW>;
+			perst-gpios = <&qcom_pinmux 48 GPIO_ACTIVE_LOW>;
 
 			status = "disabled";
 		};
@@ -754,7 +753,7 @@
 			pinctrl-0 = <&pcie2_pins>;
 			pinctrl-names = "default";
 
-			perst-gpio = <&qcom_pinmux 63 GPIO_ACTIVE_LOW>;
+			perst-gpios = <&qcom_pinmux 63 GPIO_ACTIVE_LOW>;
 
 			status = "disabled";
 		};
