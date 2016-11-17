@@ -496,6 +496,16 @@
 			qcom,controller-type = "pmic-arbiter";
 		};
 
+		tsens: tsens-ipq806x {
+			compatible = "qcom,ipq806x-tsens";
+			reg = <0x900000 0x3678>, <0x700000 0x420>;
+			reg-names = "tsens_physical", "tsens_eeprom_physical";
+			interrupts = <0 178 0>;
+			qcom,sensors = <11>;
+			qcom,tsens_factor = <1000>;
+			qcom,slope = <1176 1176 1154 1176 1111 1132 1132 1199 1132 1199 1132>;
+ 		};
+
 		gcc: clock-controller@900000 {
 			compatible = "qcom,gcc-ipq8064";
 			reg = <0x00900000 0x4000>;
