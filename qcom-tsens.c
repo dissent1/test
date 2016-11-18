@@ -466,6 +466,7 @@ static int tsens_tz_notify(struct thermal_zone_device *thermal,
 	return 1;
 }
 
+
 static int tsens_tz_set_trip_temp(struct thermal_zone_device *thermal,
 				   int trip, unsigned long temp)
 {
@@ -473,11 +474,10 @@ static int tsens_tz_set_trip_temp(struct thermal_zone_device *thermal,
 	unsigned int reg_th, reg_cntl;
 	int code, hi_code, lo_code, code_err_chk;
 
-	if (!tm_sensor || trip < 0)
-		return -EINVAL;
-
 	code_err_chk = code = tsens_tz_degC_to_code(temp,
 					tm_sensor->sensor_num);
+	if (!tm_sensor || trip < 0)
+		return -EINVAL;
 
 	lo_code = TSENS_THRESHOLD_MIN_CODE;
 	hi_code = TSENS_THRESHOLD_MAX_CODE;
