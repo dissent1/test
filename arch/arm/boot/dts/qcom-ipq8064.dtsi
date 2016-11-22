@@ -92,13 +92,13 @@
 	};
 
 	clocks {
-		cxo_board: cxo_board {
+		cxo_board {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
 			clock-frequency = <25000000>;
 		};
 
-		pxo_board: pxo_board {
+		pxo_board {
 			compatible = "fixed-clock";
 			#clock-cells = <0>;
 			clock-frequency = <25000000>;
@@ -286,8 +286,8 @@
 			reg = <0x0200a000 0x100>;
 			clock-frequency = <25000000>,
 					  <32768>;
-			clocks = <&cxo_board>, <&sleep_clk>;
-			clock-names = "ref", "sleep";
+			clocks = <&sleep_clk>;
+			clock-names = "sleep";
 			cpu-offset = <0x80000>;
 		};
 
@@ -495,16 +495,6 @@
 			reg = <0x00500000 0x1000>;
 			qcom,controller-type = "pmic-arbiter";
 		};
-
-		tsens: tsens-ipq806x {
-			compatible = "qcom,ipq806x-tsens";
-			reg = <0x900000 0x3678>, <0x700000 0x420>;
-			reg-names = "tsens_physical", "tsens_eeprom_physical";
-			interrupts = <0 178 0>;
-			qcom,sensors = <11>;
-			qcom,tsens_factor = <1000>;
-			qcom,slope = <1176 1176 1154 1176 1111 1132 1132 1199 1132 1199 1132>;
- 		};
 
 		gcc: clock-controller@900000 {
 			compatible = "qcom,gcc-ipq8064";
