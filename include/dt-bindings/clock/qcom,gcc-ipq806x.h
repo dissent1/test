@@ -291,5 +291,6 @@
 #define EBI2_AON_CLK				281
 #define NSSTCM_CLK_SRC				282
 #define NSSTCM_CLK				283
+#define NSS_CORE_CLK				284 /* Virtual */
 
 #endif
