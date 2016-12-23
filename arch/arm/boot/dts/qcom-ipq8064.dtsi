@@ -689,8 +689,7 @@
 				phys = <&hs_phy_0>, <&ss_phy_0>;
 				phy-names = "usb2-phy", "usb3-phy";
 				dr_mode = "host";
-				snps,dis_u3_susphy_quirk;			
-                        };
+			};
 		};
 
 		usb3_1: usb30@1 {
@@ -711,8 +710,7 @@
 				phys = <&hs_phy_1>, <&ss_phy_1>;
 				phy-names = "usb2-phy", "usb3-phy";
 				dr_mode = "host";
-				snps,dis_u3_susphy_quirk;			
-                        };
+			};
 		};
 
 		pcie0: pci@1b500000 {
