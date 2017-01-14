@@ -630,8 +630,8 @@
 			compatible = "syscon";
 			reg = <0x01200600 0x100>;
 		};
-	
-			hs_phy_1: phy@100f8800 {
+
+		hs_phy_1: phy@100f8800 {
 			compatible = "qcom,dwc3-hs-usb-phy";
 			reg = <0x100f8800 0x30>;
 			clocks = <&gcc USB30_1_UTMI_CLK>;
