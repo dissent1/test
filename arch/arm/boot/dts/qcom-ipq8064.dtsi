@@ -3,6 +3,7 @@
 #include "skeleton.dtsi"
 #include <dt-bindings/clock/qcom,gcc-ipq806x.h>
 #include <dt-bindings/mfd/qcom-rpm.h>
+#include <dt-bindings/clock/qcom,rpmcc.h>
 #include <dt-bindings/clock/qcom,lcc-ipq806x.h>
 #include <dt-bindings/soc/qcom,gsbi.h>
 #include <dt-bindings/reset/qcom,gcc-ipq806x.h>
@@ -200,6 +201,15 @@
 			compatible = "fixed-clock";
 			clock-frequency = <32768>;
 			#clock-cells = <0>;
+		};
+	};
+
+	firmware {
+		scm {
+			compatible = "qcom,scm-apq8064";
+
+			clocks = <&rpmcc RPM_DAYTONA_FABRIC_CLK>;
+			clock-names = "core";
 		};
 	};
 
