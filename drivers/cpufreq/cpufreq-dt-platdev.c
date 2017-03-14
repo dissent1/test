@@ -35,6 +35,8 @@ static const struct of_device_id machines[] __initconst = {
 
 	{ .compatible = "marvell,berlin", },
 
+	{ .compatible = "qcom,ipq8064", },
+
 	{ .compatible = "samsung,exynos3250", },
 	{ .compatible = "samsung,exynos4210", },
 	{ .compatible = "samsung,exynos4212", },
@@ -83,6 +85,10 @@ static const struct of_device_id machines[] __initconst = {
 
 	{ }
 };
+
+#ifdef CONFIG_KRAITCC
+struct cpufreq_dt_platform_data pdata = { .independent_clocks = true };
+#endif
 
 static int __init cpufreq_dt_platdev_init(void)
 {
