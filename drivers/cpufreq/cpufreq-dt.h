@@ -14,6 +14,13 @@
 
 struct cpufreq_dt_platform_data {
 	bool have_governor_per_policy;
+	
+	/*
+	 * True when each CPU has its own clock to control its
+	 * frequency, false when all CPUs are controlled by a single
+	 * clock.
+	 */
+	bool independent_clocks;
 };
 
 #endif /* __CPUFREQ_DT_H__ */
