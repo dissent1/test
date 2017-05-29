@@ -938,6 +938,8 @@ qca8k_sw_probe(struct mdio_device *mdiodev)
 	struct qca8k_priv *priv;
 	u32 id;
 
+	pr_warn("Probing QCA8k switch\n");
+
 	/* allocate the private data struct so that we can probe the switches
 	 * ID register
 	 */
