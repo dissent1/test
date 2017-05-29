@@ -943,6 +943,7 @@ qca8k_sw_probe(struct mdio_device *mdiodev)
 	 */
 	priv = devm_kzalloc(&mdiodev->dev, sizeof(*priv), GFP_KERNEL);
 	if (!priv)
+		pr_err("qca8k NOMEM I\n");
 		return -ENOMEM;
 
 	priv->bus = mdiodev->bus;
@@ -960,7 +961,7 @@ qca8k_sw_probe(struct mdio_device *mdiodev)
 
 	priv->ds = devm_kzalloc(&mdiodev->dev, sizeof(*priv->ds), GFP_KERNEL);
 	if (!priv->ds)
-		pr_err("qca8k NOMEM\n");
+		pr_err("qca8k NOMEM II\n");
 		return -ENOMEM;
 
 	priv->ds->priv = priv;
