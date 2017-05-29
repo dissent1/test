@@ -949,13 +949,18 @@ qca8k_sw_probe(struct mdio_device *mdiodev)
 
 	/* read the switches ID register */
 	id = qca8k_read(priv, QCA8K_REG_MASK_CTRL);
+	pr_warn("id1 %u\n", id);
 	id >>= QCA8K_MASK_CTRL_ID_S;
+	pr_warn("id2 %u\n", id);
 	id &= QCA8K_MASK_CTRL_ID_M;
+	pr_warn("id3 %u\n", id);
 	if (id != QCA8K_ID_QCA8337)
+		pr_err("No qca8k ar8337 device found\n");
 		return -ENODEV;
 
 	priv->ds = devm_kzalloc(&mdiodev->dev, sizeof(*priv->ds), GFP_KERNEL);
 	if (!priv->ds)
+		pr_err("qca8k NOMEM\n");
 		return -ENOMEM;
 
 	priv->ds->priv = priv;
