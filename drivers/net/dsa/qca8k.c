@@ -971,8 +971,12 @@ qca8k_sw_probe(struct mdio_device *mdiodev)
 	priv->ds->ops = &qca8k_switch_ops;
 	mutex_init(&priv->reg_mutex);
 	dev_set_drvdata(&mdiodev->dev, priv);
+	
+	pr_warn("Registering QCA8k switch\n");
 
 	return dsa_register_switch(priv->ds, priv->ds->dev->of_node);
+	
+	pr_warn("Probing and registering QCA8k switch done successfully\n");
 }
 
 static void
