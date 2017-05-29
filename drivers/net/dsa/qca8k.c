@@ -937,31 +937,25 @@ qca8k_sw_probe(struct mdio_device *mdiodev)
 {
 	struct qca8k_priv *priv;
 	u32 id;
-	
-	pr_warn("Probing QCA8k switch\n");
 
 	/* allocate the private data struct so that we can probe the switches
 	 * ID register
 	 */
 	priv = devm_kzalloc(&mdiodev->dev, sizeof(*priv), GFP_KERNEL);
 	if (!priv)
-		pr_err("qca8k NOMEM I\n");
 		return -ENOMEM;
 
-		/* read the switches ID register */
+	priv->bus = mdiodev->bus;
+
+	/* read the switches ID register */
 	id = qca8k_read(priv, QCA8K_REG_MASK_CTRL);
-	pr_warn("id1 %u\n", id);
 	id >>= QCA8K_MASK_CTRL_ID_S;
-	pr_warn("id2 %u\n", id);
 	id &= QCA8K_MASK_CTRL_ID_M;
-	pr_warn("id3 %u\n", id);
 	if (id != QCA8K_ID_QCA8337)
-		pr_err("No qca8k ar8337 device found\n");
 		return -ENODEV;
 
 	priv->ds = devm_kzalloc(&mdiodev->dev, sizeof(*priv->ds), GFP_KERNEL);
 	if (!priv->ds)
-		pr_err("qca8k NOMEM II\n");
 		return -ENOMEM;
 
 	priv->ds->priv = priv;
@@ -969,8 +963,6 @@ qca8k_sw_probe(struct mdio_device *mdiodev)
 	priv->ds->ops = &qca8k_switch_ops;
 	mutex_init(&priv->reg_mutex);
 	dev_set_drvdata(&mdiodev->dev, priv);
-	
-	pr_warn("Registering QCA8k switch\n");
 
 	return dsa_register_switch(priv->ds, priv->ds->dev->of_node);
 }
