@@ -590,7 +590,7 @@ qca8k_phy_read(struct dsa_switch *ds, int phy, int regnum)
 {
 	struct qca8k_priv *priv = (struct qca8k_priv *)ds->priv;
 
-	return mdiobus_read(priv->bus, phy, regnum);
+	return mdiobus_read(priv->bus, phy - 1, regnum);
 }
 
 static int
@@ -598,7 +598,7 @@ qca8k_phy_write(struct dsa_switch *ds, int phy, int regnum, u16 val)
 {
 	struct qca8k_priv *priv = (struct qca8k_priv *)ds->priv;
 
-	return mdiobus_write(priv->bus, phy, regnum, val);
+	return mdiobus_write(priv->bus, phy - 1, regnum, val);
 }
 
 static void
