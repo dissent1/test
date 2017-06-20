@@ -222,6 +222,7 @@ static int resources_available(void)
 static int cpufreq_init(struct cpufreq_policy *policy)
 {
 	struct cpufreq_frequency_table *freq_table;
+	struct device_node *np;
 	struct opp_table *opp_table = NULL;
 	struct private_data *priv;
 	struct device *cpu_dev;
@@ -353,9 +354,11 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	policy->driver_data = priv;
 	policy->clk = cpu_clk;
 
+	np = of_node_get(dev->of_node);
+	
 	if (!of_property_read_u32(np, "cpu_fab_threshold",
 					&fab_data.idle_freq)) {
-		fab_data.clk = clk;
+		fab_data.clk = cpu_clk;
 		fab_scaling_register(&fab_data);
 	}
 
