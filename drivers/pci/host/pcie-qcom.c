@@ -80,6 +80,8 @@
 #define PCIE20_PARF_CONFIG_BITS			0x50
 #define PHY_RX0_EQ(x)				(x << 24)
 
+#define PCIE20_LNK_CONTROL2_LINK_STATUS2        0xA0
+
 #define PCIE20_PARF_DBI_BASE_ADDR		0x168
 #define PCIE20_PARF_SLV_ADDR_SPACE_SIZE		0x16c
 #define PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT	0x178
@@ -148,6 +150,7 @@ struct qcom_pcie {
 	struct phy *phy;
 	struct gpio_desc *reset;
 	struct qcom_pcie_ops *ops;
+	uint32_t force_gen1;
 };
 
 #define to_qcom_pcie(x)		container_of(x, struct qcom_pcie, pp)
@@ -486,6 +489,12 @@ static int qcom_pcie_init_v0(struct qcom_pcie *pcie)
 	/* wait for clock acquisition */
 	usleep_range(1000, 1500);
 
+	if (pcie->force_gen1) {
+		writel_relaxed((readl_relaxed(
+			pcie->dbi + PCIE20_LNK_CONTROL2_LINK_STATUS2) | 1),
+			pcie->dbi + PCIE20_LNK_CONTROL2_LINK_STATUS2);
+	}
+
 	return 0;
 
 err_deassert_ahb:
@@ -678,6 +687,8 @@ static int qcom_pcie_probe(struct platform_device *pdev)
 	struct qcom_pcie *pcie;
 	struct pcie_port *pp;
 	int ret;
+	uint32_t force_gen1 = 0;
+	struct device_node *np = pdev->dev.of_node;
 
 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
 	if (!pcie)
@@ -689,6 +700,9 @@ static int qcom_pcie_probe(struct platform_device *pdev)
 	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
 	if (IS_ERR(pcie->reset))
 		return PTR_ERR(pcie->reset);
+
+	of_property_read_u32(np, "force_gen1", &force_gen1);
+	pcie->force_gen1 = force_gen1;
 
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "parf");
 	pcie->parf = devm_ioremap_resource(dev, res);
