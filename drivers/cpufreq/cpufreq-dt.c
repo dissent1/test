@@ -24,6 +24,7 @@
 #include <linux/regulator/consumer.h>
 #include <linux/slab.h>
 #include <linux/thermal.h>
+#include <linux/fab_scaling.h>
 
 #include "cpufreq-dt.h"
 
@@ -84,6 +85,8 @@ static int set_target(struct cpufreq_policy *policy, unsigned int index)
 	}
 
 	mutex_unlock(&priv->lock);
+	
+	scale_fabrics();
 
 	return ret;
 }
@@ -231,6 +234,7 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	struct srcu_notifier_head *opp_srcu_head;
 	struct device_node *l2_np;
 	struct clk *l2_clk = NULL;
+	struct fab_scaling_info fab_data;
 
 	cpu_dev = get_cpu_device(policy->cpu);
 	if (!cpu_dev) {
@@ -348,6 +352,12 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	priv->cpu_dev = cpu_dev;
 	policy->driver_data = priv;
 	policy->clk = cpu_clk;
+
+	if (!of_property_read_u32(np, "cpu_fab_threshold",
+					&fab_data.idle_freq)) {
+		fab_data.clk = clk;
+		fab_scaling_register(&fab_data);
+	}
 
 	rcu_read_lock();
 	suspend_opp = dev_pm_opp_get_suspend_opp(cpu_dev);
@@ -493,6 +503,11 @@ static int dt_cpufreq_probe(struct platform_device *pdev)
 
 static int dt_cpufreq_remove(struct platform_device *pdev)
 {
+	struct clk *cpu_clk;
+
+	clk = clk_get(cpu_dev, NULL);
+	fab_scaling_unregister(clk);
+
 	cpufreq_unregister_driver(&dt_cpufreq_driver);
 	return 0;
 }
