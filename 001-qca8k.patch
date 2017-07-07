@@ -1,4 +1,4 @@
-From 8bc13eabb42da31341c77fb5b3f61f1709843e34 Mon Sep 17 00:00:00 2001
+From dd3bdac6d1dcd98d4d494052f7df31ca21558d6f Mon Sep 17 00:00:00 2001
 From: John Crispin <john@phrozen.org>
 Date: Wed, 5 Jul 2017 10:13:33 +0200
 Subject: [PATCH] ipq806x: convert to using qca8k
@@ -29,8 +29,9 @@ Signed-off-by: John Crispin <john@phrozen.org>
  ...dsa-qca8k-allow-swapping-of-mac0-and-mac6.patch |   48 +
  ...-qca8k-add-support-for-multiple-cpu-ports.patch |  221 +
  .../908-net-dsa-qca8k-add-offloading-hooks.patch   |  150 +
- .../909-net-dsa-qca8k-add-offloading-layer.patch   | 4758 ++++++++++++++++++++
- 25 files changed, 7309 insertions(+), 199 deletions(-)
+ .../909-net-dsa-qca8k-add-offloading-layer.patch   | 4830 ++++++++++++++++++++
+ target/linux/ipq806x/patches-4.9/910-dts.patch     |  117 +
+ 26 files changed, 7498 insertions(+), 199 deletions(-)
  create mode 100644 target/linux/ipq806x/patches-4.9/900-net-dsa-make-the-slave-device-inheret-the-MAC-of-the.patch
  create mode 100644 target/linux/ipq806x/patches-4.9/901-netfilter-qca8k-add-CT-extension.patch
  create mode 100644 target/linux/ipq806x/patches-4.9/902-net-dsa-add-destroy-callback.patch
@@ -43,6 +44,7 @@ Signed-off-by: John Crispin <john@phrozen.org>
  create mode 100644 target/linux/ipq806x/patches-4.9/907-net-dsa-qca8k-add-support-for-multiple-cpu-ports.patch
  create mode 100644 target/linux/ipq806x/patches-4.9/908-net-dsa-qca8k-add-offloading-hooks.patch
  create mode 100644 target/linux/ipq806x/patches-4.9/909-net-dsa-qca8k-add-offloading-layer.patch
+ create mode 100644 target/linux/ipq806x/patches-4.9/910-dts.patch
 
 diff --git a/target/linux/ipq806x/base-files/etc/board.d/02_network b/target/linux/ipq806x/base-files/etc/board.d/02_network
 index bd81a1e..1b06fa9 100755
@@ -3110,10 +3112,10 @@ index 0000000..769652f
 + #endif /* __QCA8K_H */
 diff --git a/target/linux/ipq806x/patches-4.9/909-net-dsa-qca8k-add-offloading-layer.patch b/target/linux/ipq806x/patches-4.9/909-net-dsa-qca8k-add-offloading-layer.patch
 new file mode 100644
-index 0000000..0dcc574
+index 0000000..cfaa2ec
 --- /dev/null
 +++ b/target/linux/ipq806x/patches-4.9/909-net-dsa-qca8k-add-offloading-layer.patch
-@@ -0,0 +1,4758 @@
+@@ -0,0 +1,4830 @@
 +From b07ffec3cb03542e2169ab95fe74c4b6261777c8 Mon Sep 17 00:00:00 2001
 +From: John Crispin <john@phrozen.org>
 +Date: Tue, 1 Nov 2016 02:05:56 +0100
@@ -3448,31 +3450,27 @@ index 0000000..0dcc574
 + 
 + struct qca8k_priv {
 + 	struct regmap *regmap;
-+@@ -225,4 +329,26 @@ qca8k_reg_clear(struct qca8k_priv *priv,
++@@ -225,4 +329,22 @@ qca8k_reg_clear(struct qca8k_priv *priv,
 + 	qca8k_rmw(priv, reg, val, 0);
 + }
 + 
-++static inline void
-++qca8k_mutex_lock_nested(struct mutex *mutex, unsigned int subclass)
-++{
-++	if (likely(!in_atomic()))
-++		mutex_lock_nested(mutex, subclass);
-++}
-++
-++static inline void
-++qca8k_mutex_lock(struct mutex *mutex)
+++static inline void qca8k_mutex_lock(struct mutex *mutex)
 ++{
 ++	if (likely(!in_atomic()))
 ++		mutex_lock(mutex);
 ++}
 ++
-++static inline void
-++qca8k_mutex_unlock(struct mutex *mutex)
+++static inline void qca8k_mutex_lock_nested(struct mutex *mutex, u32 subclass)
+++{
+++	if (likely(!in_atomic()))
+++		mutex_lock_nested(mutex, subclass);
+++}
+++
+++static inline void qca8k_mutex_unlock(struct mutex *mutex)
 ++{
 ++	if (likely(!in_atomic()))
 ++		mutex_unlock(mutex);
 ++}
-++
 ++
 + #endif /* __QCA8K_H */
 +Index: linux-4.9.34/drivers/net/dsa/qca8k_offload/Makefile
@@ -3585,7 +3583,7 @@ index 0000000..0dcc574
 +===================================================================
 +--- /dev/null
 ++++ linux-4.9.34/drivers/net/dsa/qca8k_offload/qca8k.h
-+@@ -0,0 +1,307 @@
++@@ -0,0 +1,312 @@
 ++/*
 ++ * Copyright (c) 2016 John Crispin <john@phrozen.org>
 ++ *
@@ -3607,6 +3605,8 @@ index 0000000..0dcc574
 ++
 ++#include "../qca8k.h"
 ++
+++#define LAN_MASK					0x2e
+++
 ++#define S17_WAN_PORT					5
 ++
 ++#define QCA8K_CT_SCAN_TIMEOUT				5
@@ -3618,10 +3618,11 @@ index 0000000..0dcc574
 ++#define QCA8K_CT_IGNORE_MARK				1000
 ++
 ++#define QCA8K_ACL_IPV6_MAX				16
-++#define QCA8K_ACL_IPV6_FIRST				2
+++#define QCA8K_ACL_IPV6_FIRST				3
 ++#define QCA8K_ACL_IPV6_MULTICAST			QCA8K_ACL_IPV6_MAX
 ++#define QCA8K_ACL_IPV6_GATEWAY				(QCA8K_ACL_IPV6_MAX + 1)
-++#define QCA8K_ACL_IPV4_GATEWAY				1
+++#define QCA8K_ACL_IPV4_GATEWAY				2
+++#define QCA8K_ACL_IPV4_PUBLIC				1
 ++#define QCA8K_ACL_IPV4_MULTICAST			0
 ++
 ++#define QCA8K_DEFAULT_WAN_INTERFACE			"wan"
@@ -3677,7 +3678,7 @@ index 0000000..0dcc574
 ++
 ++enum qca8k_napt_proto {
 ++	QCA8K_NAPT_TCP = 0,
-++	QCA8K_NAPT_UDP ,
+++	QCA8K_NAPT_UDP = 1,
 ++	QCA8K_NAPT_GRE = 3,
 ++};
 ++
@@ -3849,6 +3850,8 @@ index 0000000..0dcc574
 ++extern void qca8k_acl_write_route_v4(struct qca8k_priv *priv, __be32 ip,
 ++				     __be32 netmask, u16 port_mask,
 ++				     int arp_idx);
+++extern void qca8k_acl_write_public_v4(struct qca8k_priv *priv, __be32 ip,
+++				      __be32 netmask, u16 port_mask);
 ++extern void qca8k_acl_write_route_v6(struct qca8k_priv *priv, int idx,
 ++				     __be32 *ip, int prefix, u16 port_mask,
 ++				     int arp_idx, int inverse);
@@ -3897,7 +3900,7 @@ index 0000000..0dcc574
 +===================================================================
 +--- /dev/null
 ++++ linux-4.9.34/drivers/net/dsa/qca8k_offload/qca8k_acl.c
-+@@ -0,0 +1,380 @@
++@@ -0,0 +1,413 @@
 ++/*
 ++ * Copyright (c) 2016 John Crispin <john@phrozen.org>
 ++ *
@@ -4046,7 +4049,7 @@ index 0000000..0dcc574
 ++	/* pattern */
 ++
 ++	/* src port - 128:134 */
-++	vlu[4] |= 0x1e;
+++	vlu[4] |= LAN_MASK;
 ++	/* dip - 31:0 */
 ++	vlu[0] = ntohl(ip);
 ++
@@ -4064,6 +4067,39 @@ index 0000000..0dcc574
 ++	msk[0] = ntohl(netmask);
 ++
 ++	qca8k_acl_write(priv, QCA8K_ACL_IPV4_MULTICAST, vlu, msk, act);
+++}
+++
+++void
+++qca8k_acl_write_public_v4(struct qca8k_priv *priv, __be32 ip, __be32 netmask, u16 port_mask)
+++{
+++	u32 vlu[5] = { 0 };
+++	u32 msk[5] = { 0 };
+++	u32 act[3] = { 0 };
+++
+++	/* action */
+++	qac8k_acl_setup_act(act, -1, priv->offload->acl_ipv4_prio, QCA8K_ACL_IPV4_PUBLIC);
+++
+++	/* pattern */
+++
+++	/* src port - 128:134 */
+++	vlu[4] |= port_mask;
+++	/* dip - 31:0 */
+++	vlu[0] = ntohl(ip);
+++
+++	/* mask */
+++
+++	/* rule type 134:135 */
+++	msk[4] = BIT(7) | BIT(6);
+++	/* rule type 128:130 */
+++	msk[4] |= QCA8K_RULE_IPV4;
+++	/* src mask - 113 */
+++	msk[3] = BIT(17);
+++	/* src mask - 112 */
+++	msk[3] |= BIT(16);
+++	/* ip_mask - 31:0 */
+++	msk[0] = ntohl(netmask);
+++
+++	qca8k_acl_write(priv, QCA8K_ACL_IPV4_PUBLIC, vlu, msk, act);
 ++}
 ++
 ++void
@@ -4274,7 +4310,7 @@ index 0000000..0dcc574
 ++	u32 mcastv6[4] = { 0xff, 0, 0, 0 };
 ++
 ++	qca8k_acl_write_multicast_v4(priv);
-++	qca8k_acl_write_route_v6(priv, QCA8K_ACL_IPV6_MULTICAST, mcastv6, 8, 0x1e, -1 , 0);
+++	qca8k_acl_write_route_v6(priv, QCA8K_ACL_IPV6_MULTICAST, mcastv6, 8, LAN_MASK, -1 , 0);
 ++
 ++	debugfs_create_file("acl", 0600, priv->offload->rootdir, priv, &qca8k_acl_ops);
 ++}
@@ -4992,7 +5028,7 @@ index 0000000..0dcc574
 ++	priv->offload->ipv4_gateway_arp = arp.idx;
 ++
 ++	qca8k_acl_write_route_v4(priv, qca8k_priv_ip_get(priv),
-++				 qca8k_priv_netmask_get(priv), 0x1e, arp.idx);
+++				 qca8k_priv_netmask_get(priv), LAN_MASK, arp.idx);
 ++
 ++	qca8k_info(priv, "new default route - gw:%08X\n",
 ++		   priv->offload->ipv4_gateway);
@@ -5110,7 +5146,7 @@ index 0000000..0dcc574
 +===================================================================
 +--- /dev/null
 ++++ linux-4.9.34/drivers/net/dsa/qca8k_offload/qca8k_hook_ct.c
-+@@ -0,0 +1,413 @@
++@@ -0,0 +1,414 @@
 ++/*
 ++ * Copyright (c) 2016 John Crispin <john@phrozen.org>
 ++ *
@@ -5158,7 +5194,7 @@ index 0000000..0dcc574
 ++		return -1;
 ++
 ++	if (qca8k_arp_search(priv, &arp, &original->src.u3.ip, 0)) {
-++		qca8k_info(priv, "not adding ct %p, waiting for valid arp\n", ct);
+++		qca8k_debug(priv, "not adding ct %p, waiting for valid arp\n", ct);
 ++		return -1;
 ++	}
 ++
@@ -5174,7 +5210,8 @@ index 0000000..0dcc574
 ++
 ++	if (conn->idx < 0) {
 ++		qca8k_pub_ip_del(priv, trans_ip_idx);
-++		qca8k_info(priv, "failed to add napt entry\n");
+++		qca8k_debug(priv, "failed to add napt entry\n");
+++		conn->fail = QCA8K_CT_FAIL_MAX;
 ++		return -1;
 ++	}
 ++
@@ -5301,7 +5338,7 @@ index 0000000..0dcc574
 ++	if (napt.aging == 0xe)
 ++		conn->fail++;
 ++	if (conn->fail >= QCA8K_CT_FAIL_MAX) {
-++		qca8k_info(priv, " excess error, removing from table %p\n", conn->ct);
+++		qca8k_debug(priv, " excess error, removing from table %p\n", conn->ct);
 ++		qca8k_ct_del_napt(priv, conn, &napt, 1);
 ++	}
 ++}
@@ -5528,7 +5565,7 @@ index 0000000..0dcc574
 +===================================================================
 +--- /dev/null
 ++++ linux-4.9.34/drivers/net/dsa/qca8k_offload/qca8k_hook_iface.c
-+@@ -0,0 +1,226 @@
++@@ -0,0 +1,260 @@
 ++/*
 ++ * Copyright (c) 2016 John Crispin <john@phrozen.org>
 ++ *
@@ -5674,7 +5711,7 @@ index 0000000..0dcc574
 ++}
 ++
 ++static int
-++qca8k_inetaddr_event(struct notifier_block *nb,
+++qca8k_inetaddr_event_lan(struct notifier_block *nb,
 ++		     unsigned long event, void *ptr)
 ++{
 ++	struct qca8k_offload *offload = container_of(nb, struct qca8k_offload, inetaddr_notifier);
@@ -5703,6 +5740,40 @@ index 0000000..0dcc574
 ++	}
 ++
 ++	return NOTIFY_DONE;
+++}
+++
+++static int
+++qca8k_inetaddr_event_wan(struct notifier_block *nb,
+++		     unsigned long event, void *ptr)
+++{
+++	struct qca8k_offload *offload = container_of(nb, struct qca8k_offload, inetaddr_notifier);
+++	struct qca8k_priv *priv = offload->priv;
+++	struct in_ifaddr *ifa = ptr;
+++	struct net_device *dev = ifa->ifa_dev->dev;
+++	struct in_device *in_dev = dev->ip_ptr;
+++
+++	/* we are only interested in the ips of the lan interface */
+++	if (strcmp(dev->name, offload->wan_dev))
+++		return NOTIFY_DONE;
+++
+++	switch (event) {
+++	case NETDEV_UP:
+++		qca8k_acl_write_public_v4(priv, in_dev->ifa_list->ifa_address, in_dev->ifa_list->ifa_mask, LAN_MASK);
+++		qca8k_debug(priv, "public ip changed, a table flush is required\n");
+++		qca8k_ct_flush(priv);
+++		break;
+++	}
+++
+++	return NOTIFY_DONE;
+++}
+++
+++static int
+++qca8k_inetaddr_event(struct notifier_block *nb,
+++		     unsigned long event, void *ptr)
+++{
+++
+++	qca8k_inetaddr_event_wan(nb, event, ptr);
+++	return qca8k_inetaddr_event_lan(nb, event, ptr);
 ++}
 ++
 ++static int
@@ -6205,7 +6276,7 @@ index 0000000..0dcc574
 +===================================================================
 +--- /dev/null
 ++++ linux-4.9.34/drivers/net/dsa/qca8k_offload/qca8k_napt.c
-+@@ -0,0 +1,334 @@
++@@ -0,0 +1,337 @@
 ++/*
 ++ * Copyright (c) 2016 John Crispin <john@phrozen.org>
 ++ *
@@ -6290,7 +6361,7 @@ index 0000000..0dcc574
 ++	reg[2] |= trans_ip_idx << 16;
 ++        /* trans ip port - 79:64 */
 ++	reg[2] |= ntohs(trans_port);
-++        /* src port - 63:48 */
+++	/* src port - 63:48 */
 ++	reg[1] |= ntohs(src_port) << 16;
 ++        /* dst port - 47:32 */
 ++	reg[1] |= ntohs(dst_port);
@@ -6473,9 +6544,9 @@ index 0000000..0dcc574
 ++	qca8k_mutex_lock(&priv->reg_mutex);
 ++	while (!qca8k_napt_iterate(priv, &entry, idx, 0)) {
 ++		idx = entry.idx;
-++		seq_printf(seq, "%d\t%08x:%d\t%08x:%d\t%08X\t",
+++		seq_printf(seq, "%d\t%08x:%d\t%08x:%d\t%d:%05d\t\t",
 ++			       entry.idx, ntohl(entry.src_ip), ntohs(entry.src_port),
-++			       ntohl(entry.dst_ip), ntohs(entry.dst_port), entry.trans_ip_idx);
+++			       ntohl(entry.dst_ip), ntohs(entry.dst_port), entry.trans_ip_idx, entry.trans_ip_port);
 ++		switch (entry.action) {
 ++		case QCA8K_MIRROR:
 ++			seq_printf(seq, "mirror\t");
@@ -6502,6 +6573,9 @@ index 0000000..0dcc574
 ++			break;
 ++		case QCA8K_NAPT_GRE:
 ++			seq_printf(seq, "gre\t");
+++			break;
+++		default:
+++			seq_printf(seq, "any\t");
 ++			break;
 ++		}
 ++		seq_printf(seq, "%d\n", entry.aging);
@@ -7733,7 +7807,7 @@ index 0000000..0dcc574
 ++
 ++	/* setup the default route */
 ++	qca8k_acl_write_route_v6(priv, QCA8K_ACL_IPV6_GATEWAY, qca8k_link_local,
-++				 0x10, 0x1e, arp.idx, 1);
+++				 0x10, LAN_MASK, arp.idx, 1);
 ++
 ++	/* keep track of the ARP entries index to make sure that we
 ++	   dont flush the entry */
@@ -7762,7 +7836,7 @@ index 0000000..0dcc574
 ++		priv->offload->ipv6_lanip[i].ip = ip;
 ++
 ++		qca8k_acl_write_route_v6(priv, i, ip.in6_u.u6_addr32,
-++					 prefix_len, 0x1e, -1, 0);
+++					 prefix_len, LAN_MASK, -1, 0);
 ++		return;
 ++	}
 ++	qca8k_info(priv, " ipv6 lan ip table is full\n");
@@ -7872,5 +7946,128 @@ index 0000000..0dcc574
 ++	if (priv->offload && priv->offload->thread)
 ++		kthread_stop(priv->offload->thread);
 ++}
+diff --git a/target/linux/ipq806x/patches-4.9/910-dts.patch b/target/linux/ipq806x/patches-4.9/910-dts.patch
+new file mode 100644
+index 0000000..0274349
+--- /dev/null
++++ b/target/linux/ipq806x/patches-4.9/910-dts.patch
+@@ -0,0 +1,117 @@
++Index: linux-4.9.34/arch/arm/boot/dts/qcom-ipq8064-ap148.dts
++===================================================================
++--- linux-4.9.34.orig/arch/arm/boot/dts/qcom-ipq8064-ap148.dts
+++++ linux-4.9.34/arch/arm/boot/dts/qcom-ipq8064-ap148.dts
++@@ -225,66 +225,66 @@
++ 				ports {
++ 					#address-cells = <1>;
++ 					#size-cells = <0>;
++-					port@0 {
+++					cpu_port1: port@0 {
++ 						reg = <0>;
++ 						label = "cpu";
++ 						ethernet = <&gmac1>;
++ 						phy-mode = "rgmii";
++ 
++- 						fixed-link {
++- 							speed = <1000>;
++- 							full-duplex;
++- 						};
+++						fixed-link {
+++							speed = <1000>;
+++							full-duplex;
+++						};
++ 					};
++ 
++ 					port@1 {
++ 						reg = <1>;
++ 						label = "lan1";
+++						cpu = <&cpu_port1>;
++ 						phy-handle = <&phy_port1>;
++ 					};
++ 
++ 					port@2 {
++ 						reg = <2>;
++ 						label = "lan2";
+++						cpu = <&cpu_port1>;
++ 						phy-handle = <&phy_port2>;
++ 					};
++ 
++ 					port@3 {
++ 						reg = <3>;
++ 						label = "lan3";
+++						cpu = <&cpu_port1>;
++ 						phy-handle = <&phy_port3>;
++ 					};
++ 
++-					port@4 {
++-						reg = <4>;
+++					port@5{
+++						reg = <5>;
++ 						label = "lan4";
++-						phy-handle = <&phy_port4>;
+++						cpu = <&cpu_port1>;
+++						phy-handle = <&phy_port5>;
++ 					};
++ 
++-					port@5 {
++-						reg = <5>;
+++					port@4 {
+++						reg = <4>;
++ 						label = "wan";
++-						phy-handle = <&phy_port5>;
+++						cpu = <&cpu_port2>;
+++						phy-handle = <&phy_port4>;
++ 					};
++ 
++-					/*
++-					 * Disabled until DSA supports multiple CPUs,
++-					 * otherwise it causes undefined behavior.
++-					 *
++-					 * port@6 {
++-					 *	reg = <6>;
++-					 *	label = "cpu";
++-					 *	ethernet = <&gmac2>;
++-					 *	phy-mode = "sgmii";
++-					 *
++- 					 *	fixed-link {
++- 					 *		speed = <1000>;
++- 					 *		full-duplex;
++- 					 *	};
++-					 * };
++-					 */
+++					cpu_port2: port@6 {
+++						reg = <6>;
+++						label = "cpu";
+++						ethernet = <&gmac2>;
+++						phy-mode = "sgmii";
+++
+++						fixed-link {
+++							speed = <1000>;
+++							full-duplex;
+++						};
+++					};
++ 				};
++-			};		
+++			};
++ 		};
++ 
++ 		gmac1: ethernet@37200000 {
++@@ -295,6 +295,8 @@
++ 			pinctrl-0 = <&rgmii2_pins>;
++ 			pinctrl-names = "default";
++ 
+++			mac-address = [00 11 22 33 44 55];
+++
++ 			fixed-link {
++ 				speed = <1000>;
++ 				full-duplex;
++@@ -306,6 +308,8 @@
++ 			phy-mode = "sgmii";
++ 			qcom,id = <2>;
++ 
+++			mac-address = [00 11 22 33 44 56];
+++
++ 			fixed-link {
++ 				speed = <1000>;
++ 				full-duplex;
 -- 
 2.1.4
