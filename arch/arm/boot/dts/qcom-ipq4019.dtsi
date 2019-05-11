@@ -17,7 +17,6 @@
 #include <dt-bindings/clock/qcom,gcc-ipq4019.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
-#include <dt-bindings/soc/qcom,tcsr.h>
 
 / {
 	model = "Qualcomm Technologies, Inc. IPQ4019";
@@ -45,8 +44,6 @@
 		spi1 = &blsp1_spi2;
 		i2c0 = &blsp1_i2c3;
 		i2c1 = &blsp1_i2c4;
-		ethernet0 = &gmac0;
-		ethernet1 = &gmac1;
 	};
 
 	cpus {
@@ -55,52 +52,56 @@
 		cpu@0 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a7";
-			enable-method = "qcom,arm-cortex-a7acc";
+			enable-method = "qcom,kpss-acc-v2";
 			next-level-cache = <&L2>;
 			qcom,acc = <&acc0>;
 			qcom,saw = <&saw0>;
 			reg = <0x0>;
 			clocks = <&gcc GCC_APPS_CLK_SRC>;
 			clock-frequency = <0>;
+			clock-latency = <256000>;
 			operating-points-v2 = <&cpu0_opp_table>;
 		};
 
 		cpu@1 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a7";
-			enable-method = "qcom,arm-cortex-a7acc";
+			enable-method = "qcom,kpss-acc-v2";
 			next-level-cache = <&L2>;
 			qcom,acc = <&acc1>;
 			qcom,saw = <&saw1>;
 			reg = <0x1>;
 			clocks = <&gcc GCC_APPS_CLK_SRC>;
 			clock-frequency = <0>;
+			clock-latency = <256000>;
 			operating-points-v2 = <&cpu0_opp_table>;
 		};
 
 		cpu@2 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a7";
-			enable-method = "qcom,arm-cortex-a7acc";
+			enable-method = "qcom,kpss-acc-v2";
 			next-level-cache = <&L2>;
 			qcom,acc = <&acc2>;
 			qcom,saw = <&saw2>;
 			reg = <0x2>;
 			clocks = <&gcc GCC_APPS_CLK_SRC>;
 			clock-frequency = <0>;
+			clock-latency = <256000>;
 			operating-points-v2 = <&cpu0_opp_table>;
 		};
 
 		cpu@3 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a7";
-			enable-method = "qcom,arm-cortex-a7acc";
+			enable-method = "qcom,kpss-acc-v2";
 			next-level-cache = <&L2>;
 			qcom,acc = <&acc3>;
 			qcom,saw = <&saw3>;
 			reg = <0x3>;
 			clocks = <&gcc GCC_APPS_CLK_SRC>;
 			clock-frequency = <0>;
+			clock-latency = <256000>;
 			operating-points-v2 = <&cpu0_opp_table>;
 		};
 
@@ -117,24 +118,24 @@
 
 		opp-48000000 {
 			opp-hz = /bits/ 64 <48000000>;
-			clock-latency-ns = <256000>;
 			opp-microvolt = <1100000>;
+			clock-latency-ns = <256000>;
 		};
 		opp-200000000 {
 			opp-hz = /bits/ 64 <200000000>;
-			clock-latency-ns = <256000>;
 			opp-microvolt = <1100000>;
+			clock-latency-ns = <256000>;
 		};
 		opp-500000000 {
 			opp-hz = /bits/ 64 <500000000>;
-			clock-latency-ns = <256000>;
 			opp-microvolt = <1100000>;
+			clock-latency-ns = <256000>;
 		};
 		opp-716000000 {
 			opp-hz = /bits/ 64 <716000000>;
-			clock-latency-ns = <256000>;
 			opp-microvolt = <1100000>;
-		};
+			clock-latency-ns = <256000>;
+ 		};
 	};
 
 	pmu {
@@ -144,7 +145,7 @@
 	};
 
 	clocks {
-		sleep_clk: sleep_clk {
+		sleep_clk: gcc_sleep_clk_src {
 			compatible = "fixed-clock";
 			clock-frequency = <32000>;
 			#clock-cells = <0>;
@@ -305,22 +306,22 @@
 		};
 
                 acc0: clock-controller@b088000 {
-			compatible = "qcom,arm-cortex-a7acc";
+                        compatible = "qcom,kpss-acc-v2";
                         reg = <0x0b088000 0x1000>, <0xb008000 0x1000>;
                 };
 
                 acc1: clock-controller@b098000 {
-			compatible = "qcom,arm-cortex-a7acc";
+                        compatible = "qcom,kpss-acc-v2";
                         reg = <0x0b098000 0x1000>, <0xb008000 0x1000>;
                 };
 
                 acc2: clock-controller@b0a8000 {
-			compatible = "qcom,arm-cortex-a7acc";
+                        compatible = "qcom,kpss-acc-v2";
                         reg = <0x0b0a8000 0x1000>, <0xb008000 0x1000>;
                 };
 
                 acc3: clock-controller@b0b8000 {
-			compatible = "qcom,arm-cortex-a7acc";
+                        compatible = "qcom,kpss-acc-v2";
                         reg = <0x0b0b8000 0x1000>, <0xb008000 0x1000>;
                 };
 
@@ -366,7 +367,7 @@
 			dma-names = "rx", "tx";
 		};
 
-		serial@78b0000 {
+		blsp1_uart2: serial@78b0000 {
 			compatible = "qcom,msm-uartdm-v1.4", "qcom,msm-uartdm";
 			reg = <0x78b0000 0x200>;
 			interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>;
@@ -486,18 +487,6 @@
 			};
 		};
 
-		wifi_glb_tcsr: tcsr@1949000 {
-			compatible = "qcom,tcsr";
-			reg = <0x1949000 0x100>;
-			ipq,wifi_glb_cfg = <TCSR_WIFI_GLB_CFG>;
-		};
-
-		wifi_noc_memtype_m0_m2_tcsr: tcsr@1957000 {
-			compatible = "qcom,tcsr";
-			reg = <0x1957000 0x100>;
-			ipq,wifi_noc_memtype_m0_m2 = <TCSR_WIFI_NOC_MEMTYPE_M0_M2>;
-		};
-
 		wifi0: wifi@a000000 {
 			compatible = "qcom,ipq4019-wifi";
 			reg = <0xa000000 0x200000>;
@@ -580,115 +569,6 @@
 					  "msi12", "msi13", "msi14", "msi15",
 					  "legacy";
 			status = "disabled";
-		};
-
-		mdio@90000 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			compatible = "qcom,ipq4019-mdio";
-			reg = <0x90000 0x64>;
-			status = "disabled";
-
-			ethernet-phy@0 {
-				reg = <0>;
-			};
-
-			ethernet-phy@1 {
-				reg = <1>;
-			};
-
-			ethernet-phy@2 {
-				reg = <2>;
-			};
-
-			ethernet-phy@3 {
-				reg = <3>;
-			};
-
-			ethernet-phy@4 {
-				reg = <4>;
-			};
-		};
-
-		ess-switch@c000000 {
-			compatible = "qcom,ess-switch";
-			reg = <0xc000000 0x80000>;
-			switch_access_mode = "local bus";
-			resets = <&gcc ESS_RESET>;
-			reset-names = "ess_rst";
-			clocks = <&gcc GCC_ESS_CLK>;
-			clock-names = "ess_clk";
-			switch_cpu_bmp = <0x1>;
-			switch_lan_bmp = <0x1e>;
-			switch_wan_bmp = <0x20>;
-			switch_mac_mode = <0>; /* PORT_WRAPPER_PSGMII */
-			switch_initvlas = <0x7c 0x54>;
-			status = "disabled";
-		};
-
-		ess-psgmii@98000 {
-			compatible = "qcom,ess-psgmii";
-			reg = <0x98000 0x800>;
-			psgmii_access_mode = "local bus";
-			status = "disabled";
-		};
-
-		edma@c080000 {
-			compatible = "qcom,ess-edma";
-			reg = <0xc080000 0x8000>;
-			qcom,page-mode = <0>;
-			qcom,rx_head_buf_size = <1540>;
-			qcom,mdio_supported;
-			qcom,poll_required = <1>;
-			qcom,num_gmac = <2>;
-			interrupts = <0  65 IRQ_TYPE_EDGE_RISING
-				      0  66 IRQ_TYPE_EDGE_RISING
-				      0  67 IRQ_TYPE_EDGE_RISING
-				      0  68 IRQ_TYPE_EDGE_RISING
-				      0  69 IRQ_TYPE_EDGE_RISING
-				      0  70 IRQ_TYPE_EDGE_RISING
-				      0  71 IRQ_TYPE_EDGE_RISING
-				      0  72 IRQ_TYPE_EDGE_RISING
-				      0  73 IRQ_TYPE_EDGE_RISING
-				      0  74 IRQ_TYPE_EDGE_RISING
-				      0  75 IRQ_TYPE_EDGE_RISING
-				      0  76 IRQ_TYPE_EDGE_RISING
-				      0  77 IRQ_TYPE_EDGE_RISING
-				      0  78 IRQ_TYPE_EDGE_RISING
-				      0  79 IRQ_TYPE_EDGE_RISING
-				      0  80 IRQ_TYPE_EDGE_RISING
-				      0 240 IRQ_TYPE_EDGE_RISING
-				      0 241 IRQ_TYPE_EDGE_RISING
-				      0 242 IRQ_TYPE_EDGE_RISING
-				      0 243 IRQ_TYPE_EDGE_RISING
-				      0 244 IRQ_TYPE_EDGE_RISING
-				      0 245 IRQ_TYPE_EDGE_RISING
-				      0 246 IRQ_TYPE_EDGE_RISING
-				      0 247 IRQ_TYPE_EDGE_RISING
-				      0 248 IRQ_TYPE_EDGE_RISING
-				      0 249 IRQ_TYPE_EDGE_RISING
-				      0 250 IRQ_TYPE_EDGE_RISING
-				      0 251 IRQ_TYPE_EDGE_RISING
-				      0 252 IRQ_TYPE_EDGE_RISING
-				      0 253 IRQ_TYPE_EDGE_RISING
-				      0 254 IRQ_TYPE_EDGE_RISING
-				      0 255 IRQ_TYPE_EDGE_RISING>;
-
-			status = "disabled";
-
-			gmac0: gmac0 {
-				local-mac-address = [00 00 00 00 00 00];
-				vlan_tag = <1 0x1f>;
-			};
-
-			gmac1: gmac1 {
-				local-mac-address = [00 00 00 00 00 00];
-				qcom,phy_mdio_addr = <4>;
-				qcom,poll_required = <1>;
-				qcom,forced_speed = <1000>;
-				qcom,forced_duplex = <1>;
-				vlan_tag = <2 0x20>;
-			};
 		};
 
 		usb3_ss_phy: ssphy@9a000 {
