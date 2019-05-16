@@ -39,10 +39,6 @@
 
 	soc {
 		pinmux@800000 {
-
-			pinctrl-0 = <&switch_reset>;
-			pinctrl-names = "default";
-
 			button_pins: button_pins {
 				mux {
 					pins = "gpio65", "gpio67", "gpio68";
@@ -70,16 +66,6 @@
 				};
 			};
 
-			switch_reset: switch_reset_pins {
-				mux {
-					pins = "gpio63";
-					function = "gpio";
-					drive-strength = <2>;
-					bias-disable;
-					output-low;
-				};
-			};
-
 			mdio0_pins: mdio0_pins {
 				mux {
 					pins = "gpio0", "gpio1";
@@ -87,6 +73,13 @@
 					drive-strength = <8>;
 					bias-disable;
 				};
+
+				switch_reset {
+					pins = "gpio63";
+					function = "gpio";
+					drive-strength = <2>;
+					bias-disable;
+					};
 			};
 
 			nand_pins: nand_pins {
@@ -304,7 +297,7 @@
 			compatible = "virtual,mdio-gpio";
 			#address-cells = <1>;
 			#size-cells = <0>;
-			gpios = <&qcom_pinmux 1 GPIO_ACTIVE_HIGH &qcom_pinmux 0 GPIO_ACTIVE_HIGH>;
+			gpios = <&qcom_pinmux 1 GPIO_ACTIVE_HIGH &qcom_pinmux 0 GPIO_ACTIVE_HIGH &qcom_pinmux 63 GPIO_ACTIVE_LOW>;
 			pinctrl-0 = <&mdio0_pins>;
 			pinctrl-names = "default";
 
