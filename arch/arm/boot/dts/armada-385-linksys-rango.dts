@@ -14,6 +14,15 @@
 	model = "Linksys WRT3200ACM";
 	compatible = "linksys,rango", "linksys,armada385", "marvell,armada385",
 		     "marvell,armada380";
+
+	chosen {
+		/*
+		 * the vendor u-boot adds root and mtdparts cmdline parameters
+		 * which we don't want... but we have to overwrite them or else
+		 * the kernel will take them at face value.
+		 */
+		bootargs-append = " coherent_pool=1M nopti nol1tf noibrs noibpb nospec_store_bypass_disable no_stf_barrier nospectre_v2 nospectre_v1 nospectre_v2_user";
+	};
 };
 
 &expander0 {
